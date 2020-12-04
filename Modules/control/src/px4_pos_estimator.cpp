@@ -166,9 +166,13 @@ void slam_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     }
 }
 
+//下面是我改动的----------------------------------
 void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
+//void t265_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
-    if (msg->header.frame_id == "t265_odom_frame")
+
+  //  if (msg->header.frame_id == "t265_odom_frame")
+  if (msg->header.frame_id == "camera_odom_frame")
     {
         pos_drone_t265 = Eigen::Vector3d(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
         // pos_drone_t265[0] = msg->pose.pose.position.x + pos_offset[0];
@@ -176,7 +180,7 @@ void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
         // pos_drone_t265[2] = msg->pose.pose.position.z + pos_offset[2];
 
         q_t265 = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
-        Euler_t265 = quaternion_to_euler(q_gazebo);
+        Euler_t265 = quaternion_to_euler(q_gazebo);  //这居然还写q_gazebo，错了吧。
         // Euler_t265[2] = Euler_t265[2] + yaw_offset;
         // q_t265 = quaternion_from_rpy(Euler_t265);
     }
@@ -184,6 +188,33 @@ void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong t265 frame id.");
     }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+//       geometry_msgs::PoseStamped vision_pose;
+
+//	vision_pose = *msg;
+
+// //pos_drone_t265 = Eigen::Vector3d(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+//	pos_drone_t265[0] = vision_pose.pose.position.x;
+//	pos_drone_t265[1] = vision_pose.pose.position.y;
+//	pos_drone_t265[2] = vision_pose.pose.position.z;
+
+
+	
+//      //   q_t265 = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+
+//	q_t265.x() = vision_pose.pose.orientation.x;
+//	q_t265.y() = vision_pose.pose.orientation.y;
+//	q_t265.z() = vision_pose.pose.orientation.z;
+//	q_t265.w() = vision_pose.pose.orientation.w;
+
+
+//	// Transform the Quaternion to Euler Angles
+//	Euler_t265 = quaternion_to_euler(q_t265);
+
+//上面是我的改动的---------------------------------
+
 }
 
 void timerCallback(const ros::TimerEvent &e)
@@ -213,8 +244,11 @@ int main(int argc, char **argv)
     ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 100, laser_cb);
 
     //  【订阅】t265估计位置
-    ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);
-
+//下面是我改动的地方------------------------------------------
+   // ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);  
+   // ros::Subscriber t265_sub = nh.subscribe<geometry_msgs::PoseStamped>("/visionPose", 100, t265_cb);
+    ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/camera/odom/sample", 100, t265_cb);
+//上面是我的改动的地方---------------------------------------------------------------
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 100, mocap_cb);
 
