@@ -316,6 +316,10 @@ int main(int argc, char **argv)
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: inter AUTO LAND filght mode");
             }
+	    if(_DroneState.landed)
+            {
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
+            }
 
             break;
 
